@@ -12,12 +12,11 @@ class RedisConfig(BaseSettings):
     REDIS_PASSWORD: str
 
     model_config = SettingsConfigDict(
-        env_file=Path(__file__).resolve().parent / ".env",
+        env_file=Path(__file__).resolve().parent.parent / ".env",
         env_file_encoding="utf-8",
         extra="ignore",
         arbitrary_types_allowed=True
     )
-
 
 class DatabaseSettings(BaseSettings):
     DB_USER: str
@@ -27,7 +26,7 @@ class DatabaseSettings(BaseSettings):
     DB_NAME: str
 
     model_config = SettingsConfigDict(
-        env_file=Path(__file__).resolve().parent / ".env",
+        env_file=Path(__file__).resolve().parent.parent / ".env",
         env_file_encoding="utf-8",
         extra="ignore",
         arbitrary_types_allowed=True
@@ -37,6 +36,9 @@ class DatabaseSettings(BaseSettings):
     def get_database_url(self):
         return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
     
+    @property
+    def get_alembic_database_url(self):
+        return f"postgresql+psycopg2://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
 class JWTConfig(BaseSettings):
     JWT_SECRET_KEY: str
@@ -50,7 +52,6 @@ class JWTConfig(BaseSettings):
         extra="ignore",
         arbitrary_types_allowed=True
     )
-
 
 @lru_cache
 def get_redis_config():

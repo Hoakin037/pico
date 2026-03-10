@@ -1,1 +1,1 @@
-from .settings import RedisConfig, JWTConfig, DatabaseSettings, get_redis_config, get_jwt_config, get_database_settings
+from .configs_settings import RedisConfig, JWTConfig, DatabaseSettings, get_database_settings, get_jwt_config, get_redis_config
