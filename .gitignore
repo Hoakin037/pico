@@ -1,0 +1,13 @@
+*.env
+*.pyc
+*.db-shm
+*.db
+*/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.Python
+*.venv
+*/versions/
+*.ini
+*/migration/
