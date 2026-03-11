@@ -7,7 +7,6 @@ class RedisConfig(BaseSettings):
     REDIS_HOST: str
     REDIS_PORT: int
     REDIS_DB: int
-    REDIS_PREFIX: str
     REDIS_DECODE_RESPONSES: bool
     REDIS_PASSWORD: str
 

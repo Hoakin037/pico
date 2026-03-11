@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sess
 from database.tables import Base
 from core import get_database_settings
 
-settings =get_database_settings()
+settings = get_database_settings()
 engine = create_async_engine(url=settings.get_database_url, pool_pre_ping=True)
 
 async_session_maker = async_sessionmaker(
@@ -23,8 +23,6 @@ async def get_session():
         try:
             yield session
         except Exception as e:
-            await session.rollback()
             raise Exception(f"Ошибка бд: {e}")
-        finally:
-            session.close()
+
             
