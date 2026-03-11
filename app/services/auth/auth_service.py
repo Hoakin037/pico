@@ -29,7 +29,8 @@ class AuthService:
         self.jwt_manager = jwt_manager
         self.password_hash = PasswordHash.recommended()
 
-    async def register_new_user(self, user: UserCreate, counter=counter):
+    async def register_new_user(self, user: UserCreate):
+        global counter
         if user.email not in db:
             password_hash = self.password_hash.hash(user.password)
             db[user.email] = {
@@ -40,6 +41,7 @@ class AuthService:
                 "refresh_token": None
             }
             counter += 1
+            print(counter)
             # Это все моковое
             return {
                 "id": counter - 1,

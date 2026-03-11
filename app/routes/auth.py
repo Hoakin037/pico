@@ -39,8 +39,8 @@ async def authenticate_user(
         value=refresh_token,
         httponly=True,
         max_age=3 * 24 * 60 * 60,
-        samesite="lax",
-        secure=True,
+        samesite=None,
+        secure=False,
         path="/api/auth"
     )
 
