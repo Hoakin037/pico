@@ -7,13 +7,13 @@ from contextlib import asynccontextmanager
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     from core import init_redis_client, get_redis_config
-    from database import init_db
+    from database import db_manager
 
     redis_config = get_redis_config()
     redis_client = init_redis_client(redis_config)
     app.state.redis_client = redis_client
 
-    await init_db()
+    await db_manager.database_init()
     print("База данных и Redis успешно инициализированы.")
 
     yield

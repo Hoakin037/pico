@@ -10,9 +10,13 @@ class UserCreate(UserBaseEmail):
     name: str = Field(max_length=36)
     surname: str = Field(max_length=36)
     email: EmailStr = Field(max_length=144)
-    password: str = Field(max_length=36)
+    password: str = Field(max_length=300)
 
 class UserAuth(UserBaseEmail):
     email: EmailStr = Field(max_length=144)
     password: str = Field(max_length=36)
+
+class UserUpdate(UserBaseID):
+    name: str | None = Field(max_length=36)
+    surname: str | None = Field(max_length=36)
 
