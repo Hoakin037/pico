@@ -1,30 +1,49 @@
 from redis import RedisError
 from redis.asyncio import Redis
-from fastapi import Request, Depends
+from fastapi import Request
 import json
+from pathlib import Path
 from typing import Dict, Any
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from functools import lru_cache
 
-from core import RedisConfig
+class RedisConfig(BaseSettings):
+    REDIS_HOST: str
+    REDIS_PORT: int
+    REDIS_DB: int
+    REDIS_DECODE_RESPONSES: bool
+    REDIS_PASSWORD: str
+
+    model_config = SettingsConfigDict(
+        env_file=Path(__file__).resolve().parent.parent / ".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+        arbitrary_types_allowed=True
+    )
+
+@lru_cache
+def get_redis_config():
+    return RedisConfig()
 
 
 class RedisManager:
     def __init__(self, client: Redis):
             self.client = client
 
-    def _get_token_key(self, token: str):
+    def _get_token_key(self, token: str) -> str:
         return f"refresh:{token}"
 
-    def _get_user_sessions_key(self, user_id: str):
+    def _get_user_sessions_key(self, user_id: str) -> str:
         return f"user_sessions:{user_id}"
 
-    async def create_session(self, user_id: str, token: str, device_info: Dict[str, Any], ttl_seconds: int):
+    async def create_session(self, user_id: str, token: str, ttl_seconds: int) -> bool:
        
         token_key = self._get_token_key(token)
         user_sessions_key = self._get_user_sessions_key(user_id)
         
         session_data = json.dumps({
             "user_id": user_id,
-            **device_info
+            # **device_info пока что без
         })
 
         try:
@@ -38,7 +57,7 @@ class RedisManager:
         except RedisError as e:
             raise Exception(f"{e}")
 
-    async def get_session(self, token: str):
+    async def get_session(self, token: str) -> dict:
         token_key = self._get_token_key(token)
         try:
             user_data = await self.client.get(token_key)
@@ -50,7 +69,7 @@ class RedisManager:
         except json.JSONDecodeError as e:
             raise Exception(f"{e}")
 
-    async def revoke_session(self, token: str):
+    async def revoke_session(self, token: str) -> bool:
         token_key = self._get_token_key(token)
         try:
             # Сначала получаем user_id, чтобы почистить обратный индекс
@@ -72,7 +91,7 @@ class RedisManager:
         except Exception:
             return False
 
-    async def revoke_all_user_sessions(self, user_id: str):
+    async def revoke_all_user_sessions(self, user_id: str) -> int:
         user_sessions_key = self._get_user_sessions_key(user_id)
         try:
             # Получаем все токены пользователя
@@ -94,11 +113,7 @@ class RedisManager:
         self.client.close()
 
 
-async def get_redis_manager(request: Request):
-    redis_client: Redis = request.app.state.redis_client
-    return RedisManager(redis_client)
-
-def init_redis_client(config: RedisConfig):
+def init_redis_client(config: RedisConfig) -> Redis:
     redis_client = Redis(
         host=config.REDIS_HOST,
         port=config.REDIS_PORT,
@@ -110,3 +125,7 @@ def init_redis_client(config: RedisConfig):
         max_connections=50
     )
     return redis_client
+
+async def get_redis_manager(request: Request) -> RedisManager:
+    redis_client: Redis = request.app.state.redis_client
+    return RedisManager(redis_client)

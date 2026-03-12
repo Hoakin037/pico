@@ -13,9 +13,12 @@ class JWTManager:
     async def create_token(self, payload: dict, token_type: Literal["refresh", "access"]):
         payload_copy = payload.copy()
         if token_type=="refresh":
-            expires_delta = timedelta(days=self.config.REFRESH_TOKEN_EXPIRE_DAYS)
+            # для теста
+            expires_delta = timedelta(minutes=5)
+            # expires_delta = timedelta(minutes=self.config.REFRESH_TOKEN_EXPIRE_DAYS)
         else:
-            expires_delta = timedelta(minutes=self.config.ACCESS_TOKEN_EXPIRE_MIN)
+            # expires_delta = timedelta(minutes=self.config.ACCESS_TOKEN_EXPIRE_MIN)
+            expires_delta = timedelta(minutes=2)
         expire = datetime.now(timezone.utc) + expires_delta
         payload_copy.update({
             'type': token_type, 
@@ -37,7 +40,10 @@ class JWTManager:
             raise HTTPException(status_code=401, detail="Ошибка валидации jwt токена.")
         return user_id
 
-
+    @property
+    def get_refresh_token_ttl_seconds(self) -> int:
+        return self._jwt_manager.config.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
+        
 
 def get_jwt_manager(config: JWTConfig = Depends(get_jwt_config)):
     return JWTManager(config)
