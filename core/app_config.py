@@ -26,9 +26,10 @@ def app_fabric() -> FastAPI:
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=["http://localhost", "http://localhost:5173", "http://192.168.0.109","http://192.168.0.109:5173"],
         allow_methods=["*"],
-        allow_headers=["*"],    
+        allow_headers=["*"],
+        allow_credentials=True, 
     )
     app.include_router(router)
 

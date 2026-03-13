@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Cookie, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
 from modules.auth import AuthService, get_auth_service, UserAuth, UserLogOut, UserRegister, UserBaseID, get_current_user
 from modules.users import UserResponse, UserService, get_user_service
@@ -21,22 +21,23 @@ async def register_new_user(
 async def login_user(
     user: UserAuth,
     auth_service: AuthService = Depends(get_auth_service),
-    user_service: UserService = Depends(get_user_service)
+    user_service: UserService = Depends(get_user_service),
+    response: Response = None
 ):
     user_tokens = await auth_service.login_user(user, user_service)
 
-    user_login_response = JSONResponse(content={
+    user_login_response = {
         "user_id": user_tokens.id,
         "access_token": user_tokens.access_token,
         "token_type": "Bearer"
-    })
-    user_login_response.set_cookie(
+    }
+    response.set_cookie(
         key="refresh_token", 
         value=user_tokens.refresh_token, 
         httponly=True, 
         secure=False, 
-        samesite=None, 
-        max_age=3*60
+        samesite="lax", 
+        max_age=3600
     )
 
     return user_login_response
@@ -57,21 +58,34 @@ async def logout_user(
 async def refresh_tokens(
         refresh_token: str = Cookie(None),
         auth_service: AuthService = Depends(get_auth_service),
-        user_service: UserService = Depends(get_user_service)
+        user_service: UserService = Depends(get_user_service),
+        response: Response = None
 ):
     if refresh_token:
         user_new_tokens = await auth_service.refresh_tokens(refresh_token, user_service)
-        user_refresh_tokens_response = JSONResponse({
+        user_refresh_tokens_response = {
             "user_id": user_new_tokens.id,
             "access_token": user_new_tokens.access_token,
             "token_type": "Bearer"
-        })
-        user_refresh_tokens_response.set_cookie(
+        }
+        response.set_cookie(
             key="refresh_token", 
             value=user_new_tokens.refresh_token,
-            max_age=3 * 60,
+            max_age=3600,
             secure=False,
-            samesite=None,
+            samesite="lax",
             httponly=True
         )
-        return user_refresh_tokens_response       
+        return user_refresh_tokens_response
+    
+    raise HTTPException(status_code=401, detail="refresh токен не передан.")       
+    
+@auth.get(path="/check_jwt", status_code=200)
+async def check_jwt(
+    current_user: UserBaseID = Depends(get_current_user)
+):
+    if current_user:
+        return {
+            "user_id": current_user.id
+        }
+    raise HTTPException(status_code=404, detail="Пользователь не найден")

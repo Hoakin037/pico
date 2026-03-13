@@ -68,6 +68,7 @@ class AuthService:
         raise HTTPException(status_code=404, detail="Пользователь не найден.")
     
     async def refresh_tokens(self, refresh_token: str, user_service: UserService) -> UserTokens:
+        print("в рефреше")
         user_id = await self._jwt_manager.verify_token(refresh_token)
         current_user = await user_service.get_user_by_id(UserBaseID(id=user_id))
         user_session = await self._redis_manager.get_session(refresh_token)
@@ -93,7 +94,7 @@ async def get_current_user(
         access_token = credentials.credentials
         user_id = await jwt_manager.verify_token(access_token)
         current_user = await user_service.get_user_by_id(UserBaseID(id=user_id))
-
+        
         return UserBaseID(id=current_user.id)
     
     raise HTTPException(status_code=401, detail="Токен некорректный или отсутсвует")

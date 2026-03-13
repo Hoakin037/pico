@@ -14,11 +14,11 @@ class JWTManager:
         payload_copy = payload.copy()
         if token_type=="refresh":
             # для теста
-            expires_delta = timedelta(seconds=180)
+            expires_delta = timedelta(hours=1)
             # expires_delta = timedelta(minutes=self.config.REFRESH_TOKEN_EXPIRE_DAYS)
         else:
             # expires_delta = timedelta(minutes=self.config.ACCESS_TOKEN_EXPIRE_MIN)
-            expires_delta = timedelta(seconds=30)
+            expires_delta = timedelta(seconds=10)
         expire = datetime.now(timezone.utc) + expires_delta
         payload_copy.update({
             'type': token_type, 
