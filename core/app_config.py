@@ -2,6 +2,8 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
+from api import router
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     from core import init_redis_client, get_redis_config
@@ -28,6 +30,6 @@ def app_fabric() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],    
     )
-    #добавить импорт роута
+    app.include_router(router)
 
     return app

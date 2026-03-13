@@ -17,7 +17,7 @@ class UserRepository:
         return current_user
     
     async def create_user(self, user: Users, session: AsyncSession) -> None:
-        await session.add(user)
+        session.add(user)
 
     async def set_user_activity(self, user: Users, is_active: bool) -> Users:
         user.is_active = is_active

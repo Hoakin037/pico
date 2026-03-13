@@ -14,31 +14,31 @@ class JWTManager:
         payload_copy = payload.copy()
         if token_type=="refresh":
             # для теста
-            expires_delta = timedelta(minutes=5)
+            expires_delta = timedelta(seconds=180)
             # expires_delta = timedelta(minutes=self.config.REFRESH_TOKEN_EXPIRE_DAYS)
         else:
             # expires_delta = timedelta(minutes=self.config.ACCESS_TOKEN_EXPIRE_MIN)
-            expires_delta = timedelta(minutes=2)
+            expires_delta = timedelta(seconds=30)
         expire = datetime.now(timezone.utc) + expires_delta
         payload_copy.update({
             'type': token_type, 
             'exp': expire.timestamp(), # Срок действия
             "iat": datetime.now(timezone.utc).timestamp() # Время выпуска
             })
-
         return encode(
             payload_copy, 
             self.config.JWT_SECRET_KEY, 
             algorithm=self.config.JWT_ALGORITHM
         )
     
-    async def verify_token(self, token: str):
+    async def verify_token(self, token: str) -> int:
         try:
             payload = decode(token, self.config.JWT_SECRET_KEY, self.config.JWT_ALGORITHM)
             user_id = payload.get("sub")
+            print(user_id)
+            return int(user_id)
         except (ExpiredSignatureError, InvalidSignatureError, DecodeError):
             raise HTTPException(status_code=401, detail="Ошибка валидации jwt токена.")
-        return user_id
 
     @property
     def get_refresh_token_ttl_seconds(self) -> int:

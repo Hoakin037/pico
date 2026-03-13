@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
-
+from fastapi.responses import JSONResponse
 class UserBaseID(BaseModel):
     id: int
 
@@ -12,8 +12,12 @@ class UserRegister(UserBaseEmail):
     email: EmailStr = Field(max_length=144)
     password: str = Field(max_length=36)
 
-class UserLogOut(UserBaseID):
-    token: str
-    
 class UserAuth(UserBaseEmail):
     password: str = Field(max_length=36)
+
+class UserTokens(UserBaseID):
+    access_token: str
+    refresh_token: str
+
+class UserLogOut(UserBaseID):
+    refresh_token: str

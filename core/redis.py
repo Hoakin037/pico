@@ -108,7 +108,7 @@ class RedisManager:
             return len(tokens)
         except RedisError as e:
             raise Exception(f"{e}")
-
+ 
     def close(self):
         self.client.close()
 
