@@ -35,7 +35,6 @@ class JWTManager:
         try:
             payload = decode(token, self.config.JWT_SECRET_KEY, self.config.JWT_ALGORITHM)
             user_id = payload.get("sub")
-            print(user_id)
             return int(user_id)
         except (ExpiredSignatureError, InvalidSignatureError, DecodeError):
             raise HTTPException(status_code=401, detail="Ошибка валидации jwt токена.")

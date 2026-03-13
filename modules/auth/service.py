@@ -36,25 +36,28 @@ class AuthService:
             password_hash = await user_service.get_user_password_hash(UserBaseEmail(email=user.email)) 
 
             if self._pwd_context.verify(user.password, password_hash):
-                payload = {"sub": str(current_user.id)}
-                access_token = await self._jwt_manager.create_token(payload, "access")
-                refresh_token = await self._jwt_manager.create_token(payload, "refresh")
+                user_login_response = await self.create_tokens(current_user.id)
 
-                # ttl_seconds = self._jwt_manager.get_refresh_token_ttl_seconds
-                # await self._redis_manager.create_session(str(current_user.id), refresh_token, ttl_seconds)
-
-                # mock
-                await self._redis_manager.create_session(str(current_user.id), refresh_token, 3 * 60)
-
-                user_login_response = UserTokens(
-                    id=current_user.id,
-                    access_token=access_token,
-                    refresh_token=refresh_token    
-                )
                 return user_login_response
             
             raise HTTPException(status_code=401, detail="Неверный пароль.")
         raise HTTPException(status_code=404, detail="Пользователь не найден.")
+
+    async def create_tokens(self, user_id: int) -> UserTokens:
+        payload = {"sub": str(user_id)}
+        access_token = await self._jwt_manager.create_token(payload, "access")
+        refresh_token = await self._jwt_manager.create_token(payload, "refresh")
+        # ttl_seconds = self._jwt_manager.get_refresh_token_ttl_seconds
+                # await self._redis_manager.create_session(str(current_user.id), refresh_token, ttl_seconds)
+
+        # mock
+        await self._redis_manager.create_session(str(user_id), refresh_token, 3 * 60)
+
+        return UserTokens(
+            id=user_id,
+            access_token=access_token,
+            refresh_token=refresh_token    
+        )
 
     async def logout_user(self, user: UserLogOut, user_service: UserService) -> None:
         if await user_service.get_user_by_id(UserBaseID(id=user.id)):
@@ -64,6 +67,19 @@ class AuthService:
             raise HTTPException(status_code=404, detail="Пользователь уже вышел из аккаунта на данном устройстве.")
         raise HTTPException(status_code=404, detail="Пользователь не найден.")
     
+    async def refresh_tokens(self, refresh_token: str, user_service: UserService) -> UserTokens:
+        user_id = await self._jwt_manager.verify_token(refresh_token)
+        current_user = await user_service.get_user_by_id(UserBaseID(id=user_id))
+        user_session = await self._redis_manager.get_session(refresh_token)
+        
+        if current_user and user_session:
+            await self._redis_manager.revoke_session(refresh_token)
+            
+            return await self.create_tokens(user_id)
+        raise HTTPException(status_code=401, detail="Не корректный токен или пользователь не сущетсвует.")
+            
+
+
 
 async def get_auth_service(jwt_manager: JWTManager = Depends(get_jwt_manager), redis_manager: RedisManager = Depends(get_redis_manager)) -> AuthService:
     return AuthService(jwt_manager=jwt_manager, redis_manager=redis_manager)
