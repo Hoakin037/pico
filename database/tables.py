@@ -1,7 +1,7 @@
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy import String, ForeignKey, DateTime, func
 
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional
 class Base(DeclarativeBase):
     pass
