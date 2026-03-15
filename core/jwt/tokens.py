@@ -18,7 +18,7 @@ class JWTManager:
             # expires_delta = timedelta(minutes=self.config.REFRESH_TOKEN_EXPIRE_DAYS)
         else:
             # expires_delta = timedelta(minutes=self.config.ACCESS_TOKEN_EXPIRE_MIN)
-            expires_delta = timedelta(seconds=10)
+            expires_delta = timedelta(seconds=60)
         expire = datetime.now(timezone.utc) + expires_delta
         payload_copy.update({
             'type': token_type, 

@@ -4,8 +4,9 @@ from fastapi import Depends, HTTPException
 from database import get_session, Users
 from .schemas import UserCreate, UserBaseID, UserBaseEmail, UserUpdate, UserResponse
 from .repository import UserRepository, get_user_repository
+from .interfaces import UserProvider
 
-class UserService:
+class UserService(UserProvider):
     def __init__(self, session: AsyncSession, repository: UserRepository):
         self._session = session
         self._repository = repository

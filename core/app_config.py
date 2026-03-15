@@ -3,18 +3,23 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from api import router
+from core import init_redis_client, get_redis_config
+from database import db_manager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    from core import init_redis_client, get_redis_config
-    from database import db_manager
-
     redis_config = get_redis_config()
     redis_client = init_redis_client(redis_config)
-    app.state.redis_client = redis_client
+    try:
+        await redis_client.ping()
+        app.state.redis_client = redis_client
+        print("Успешное подключение к Redis.")
+    except ConnectionError as e:
+        print(f"Ошибка подключения к Redis: {e}")
+        raise RuntimeError("Не удалось подключиться к Redis при запуске.") from e
 
     await db_manager.database_init()
-    print("База данных и Redis успешно инициализированы.")
+    print("Успешное поддключение к базе данных.")
 
     yield
 
